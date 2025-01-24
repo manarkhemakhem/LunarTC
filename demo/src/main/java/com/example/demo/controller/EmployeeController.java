@@ -1,13 +1,18 @@
 package com.example.demo.controller;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import com.example.demo.model.Employee;
 import com.example.demo.service.EmployeeService;
+import com.example.demo.service.ExcelExportService;
 
 @CrossOrigin(origins = "http://localhost:4200") 
 @RestController
@@ -16,6 +21,38 @@ public class EmployeeController {
 
     @Autowired
     private EmployeeService employeeService;
+
+    @Autowired
+    private ExcelExportService excelExportService;
+
+    // Exporter les employés en fichier Excel
+    @GetMapping("/export")
+    public ResponseEntity<InputStreamResource> exportEmployees() {
+        try {
+            // Tentative de génération du fichier Excel
+            ByteArrayInputStream byteArrayInputStream = employeeService.exportToExcel();
+            
+            // Si l'export a réussi, ajouter les headers pour le téléchargement
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Content-Disposition", "attachment; filename=employees.xlsx");
+            return ResponseEntity
+                    .ok()
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(new InputStreamResource(byteArrayInputStream));
+            
+        } catch (IOException e) {
+            // Retourner une réponse interne avec détails d'erreur pour comprendre ce qui se passe
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new InputStreamResource(new ByteArrayInputStream("Erreur interne du serveur.".getBytes())));
+        } catch (Exception e) {
+            // Capture des autres exceptions possibles
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new InputStreamResource(new ByteArrayInputStream(("Erreur inconnue: " + e.getMessage()).getBytes())));
+        }
+    }
+    
 
     // Récupérer tous les employés
     @GetMapping

@@ -4,6 +4,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.example.demo.model.Employee;
 import com.example.demo.repository.EmployeeRepository;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,6 +15,13 @@ public class EmployeeService {
 
     @Autowired
     private EmployeeRepository employeeRepository;  // Injection du repository
+    @Autowired
+    private ExcelExportService excelExportService; // Service pour l'export Excel
+
+  public ByteArrayInputStream exportToExcel() throws IOException {
+        return excelExportService.exportToExcel();  // Appel à la méthode du service d'export
+    }
+
 
     // Récupérer tous les employés
     public List<Employee> getAllEmployees() {
